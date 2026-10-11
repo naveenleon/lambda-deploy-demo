@@ -1,0 +1,24 @@
+version: 0.2
+
+env:
+  variables:
+    LAMBDA_FUNCTION_NAME: "my-python-lambda"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+  build:
+    commands:
+      - echo "Packaging Lambda..."
+      - pip install -r requirements.txt -t package/
+      - cp lambda_function.py package/
+      - cd package && zip -r ../lambda.zip . && cd ..
+      - echo "Deploying to $LAMBDA_FUNCTION_NAME..."
+      - aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb://lambda.zip
+      - aws lambda wait function-updated --function-name "$LAMBDA_FUNCTION_NAME"
+      - echo "Deployment complete"
+
+artifacts:
+  files:
+    - lambda.zip
